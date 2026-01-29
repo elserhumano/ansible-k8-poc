@@ -1,0 +1,14 @@
+- hosts: workers
+  become: yes
+  vars:
+    api_server: "192.168.167.10:6443"
+    token: "REEMPLAZAR_TOKEN"
+    ca_hash: "sha256:REEMPLAZAR_HASH"
+
+  tasks:
+  - name: Join worker to cluster
+    command: >
+      kubeadm join {{ api_server }}
+      --token {{ token }}
+      --discovery-token-ca-cert-hash {{ ca_hash }}
+

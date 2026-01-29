@@ -1,0 +1,30 @@
+---
+- name: Init Kubernetes Control Plane
+  hosts: k8s_control
+  become: yes
+  tasks:
+
+  - name: Reset previous cluster (safe)
+    command: kubeadm reset -f
+    ignore_errors: yes
+
+  - name: Init cluster
+    command: kubeadm init --apiserver-advertise-address=192.168.167.10 --pod-network-cidr=10.244.0.0/16
+    register: kubeadm_init
+
+  - name: Extract join command
+    set_fact:
+      join_cmd: "{{ kubeadm_init.stdout_lines | select('search', 'kubeadm join') | list | join(' ') }}"
+
+  - name: Show join command (debug)
+    debug:
+      var: join_cmd
+
+- name: Join workers to cluster
+  hosts: k8s_workers
+  become: yes
+  tasks:
+
+  - name: Join worker nodes
+    command: "{{ hostvars['k8s-cp'].join_cmd }}"
+
